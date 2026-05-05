@@ -1,0 +1,33 @@
+---
+description: Core project context for vault-forge - an Obsidian vault generator for an Elastic Solution Architect
+alwaysApply: true
+---
+
+# Vault Forge Project Context
+
+## What This Project Is
+
+`vault-forge` is a Python tool that generates and manages an Obsidian vault tailored for a Solution Architect at Elastic. It is NOT the vault itself -- it produces a vault as output.
+
+## Tech Stack
+
+- Python 3.11+
+- Dependencies: PyYAML, requests, pypandoc_binary, python-pptx
+- No web framework. CLI scripts only.
+
+## Project Structure
+
+- `setup_vault.py` -- main entry point, scaffolds the vault
+- `import_notes.py` -- imports local .docx/.pptx/.md/.txt files into the vault
+- `config.yaml` -- drives ALL configuration (vault path, folders, plugins, settings)
+- `templates/` -- Obsidian Templater templates (copied into vault)
+- `prompts/` -- Copilot AI prompt templates (copied into vault)
+- `obsidian_config/` -- `.obsidian/` JSON configs
+- `content/` -- starter vault content (Home.md, CLAUDE.md, Conventions.md, Getting Started.md)
+
+## Key Rules
+
+1. **Config-driven**: All vault structure, folder names, plugin lists, and settings live in `config.yaml`. Scripts read config -- never hardcode vault structure.
+2. **Output isolation**: The generated vault is a separate directory (path from `config.yaml`). Scripts must never modify files outside the target vault path.
+3. **Idempotency**: `setup_vault.py` must be safe to re-run. Never overwrite existing user notes. Configs and templates may be updated.
+4. **Coding style**: Type hints on all functions. Docstrings on public functions (PEP 257). Use `pathlib.Path` not `os.path`. Use `logging` not `print`. Actionable error messages.

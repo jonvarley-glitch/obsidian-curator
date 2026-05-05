@@ -1,0 +1,8 @@
+pyyaml
+requests
+pypandoc_binary
+python-pptx
+pytest
+
+# Optional: only needed if using --ai flag for API-based classification
+# anthropic

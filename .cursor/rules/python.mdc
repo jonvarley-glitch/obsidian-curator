@@ -1,0 +1,71 @@
+---
+description: Python coding standards for vault-forge scripts
+globs: "**/*.py"
+alwaysApply: false
+---
+
+# Python Standards
+
+## Type Hints
+
+Required on all function signatures and return types. Use `from __future__ import annotations` for forward references.
+
+```python
+def create_folder(path: Path, name: str) -> Path:
+```
+
+## Paths
+
+Use `pathlib.Path` throughout. Never string concatenation or `os.path`.
+
+```python
+# Good
+vault_path = base_path / "01-Customers"
+vault_path.mkdir(parents=True, exist_ok=True)
+
+# Bad
+vault_path = os.path.join(base_path, "01-Customers")
+```
+
+## Config Access
+
+Read from `config.yaml` via a typed dataclass or TypedDict. Never hardcode vault folder names or plugin lists.
+
+## File Operations
+
+- `Path.mkdir(parents=True, exist_ok=True)` for directories
+- `shutil.copy2` for file copies preserving metadata
+- Write files with explicit `encoding="utf-8"`
+
+## HTTP / API Calls
+
+- Use `requests` with `timeout=30`
+- Handle rate limits from GitHub API and Google APIs
+- Always check `response.raise_for_status()`
+
+## Logging
+
+Use `logging` module. INFO for progress, WARNING for skipped items, ERROR for failures.
+
+```python
+logger = logging.getLogger(__name__)
+logger.info("Created folder: %s", folder_name)
+```
+
+Never use bare `print()` for status output.
+
+## Error Handling
+
+Catch specific exceptions. Provide actionable messages:
+
+```python
+# Good
+raise FileNotFoundError(f"Pandoc not found -- install with: brew install pandoc")
+
+# Bad
+raise Exception("conversion failed")
+```
+
+## Testing
+
+Use `pytest`. Tests in `tests/` mirror source structure. Mock all filesystem and API calls.

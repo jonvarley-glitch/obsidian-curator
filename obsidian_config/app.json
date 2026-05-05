@@ -1,0 +1,18 @@
+{
+  "useMarkdownLinks": false,
+  "newLinkFormat": "shortest",
+  "attachmentFolderPath": "Assets",
+  "defaultViewMode": "source",
+  "readableLineLength": true,
+  "strictLineBreaks": true,
+  "spellcheck": true,
+  "showLineNumber": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "00-Inbox",
+  "showFrontmatter": true,
+  "foldHeading": true,
+  "foldIndent": true,
+  "autoPairBrackets": true,
+  "autoPairMarkdown": true,
+  "smartIndentList": true
+}

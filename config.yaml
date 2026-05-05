@@ -1,0 +1,143 @@
+# Vault Forge Configuration
+# All vault structure, plugins, and settings are defined here.
+# Scripts read this file -- they never hardcode vault structure.
+
+vault:
+  name: ElasticSA
+  path: ~/Documents/ObsidianVaults/ElasticSA
+
+folders:
+  - "00-Inbox"
+  - "01-Customers"
+  - "02-Projects"
+  - "03-Meetings"
+  - "04-Knowledge"
+  - "05-Industry"
+  - "06-Competition"
+  - "07-Demos"
+  - "08-ESATs"
+  - "09-Workshops"
+  - "10-Certifications"
+  - "11-Partners"
+  - "12-Internal"
+  - "13-Tasks"
+  - "90-Archive"
+  - "Templates"
+  - "Prompts"
+  - "Assets"
+
+plugins:
+  # AI
+  - id: obsidian-copilot
+    repo: logancyang/obsidian-copilot
+  - id: smart-connections
+    repo: brianpetro/obsidian-smart-connections
+
+  # Templating and note creation
+  - id: templater-obsidian
+    repo: SilentVoid13/Templater
+  - id: quickadd
+    repo: chhoumann/quickadd
+
+  # Querying and dashboards
+  - id: dataview
+    repo: blacksmithgu/obsidian-dataview
+
+  # Task and project management
+  - id: obsidian-kanban
+    repo: mgmeyers/obsidian-kanban
+
+  # Calendar and periodic notes
+  - id: obsidian-calendar-plugin
+    repo: liamcain/obsidian-calendar-plugin
+  - id: periodic-notes
+    repo: liamcain/obsidian-periodic-notes
+
+  # Vault management and hygiene
+  - id: obsidian-git
+    repo: Vinzent03/obsidian-git
+  - id: homepage
+    repo: mirnovov/obsidian-homepage
+  - id: tag-wrangler
+    repo: pjeby/tag-wrangler
+  - id: obsidian-linter
+    repo: platers/obsidian-linter
+  - id: find-unlinked-files
+    repo: Vinzent03/find-unlinked-files
+
+core_plugins:
+  enable:
+    - file-explorer
+    - global-search
+    - switcher
+    - backlink
+    - outgoing-link
+    - graph
+    - outline
+    - file-recovery
+    - bookmarks
+    - command-palette
+    - page-preview
+    - note-composer
+  disable:
+    - daily-notes        # Replaced by Periodic Notes
+    - templates          # Replaced by Templater
+    - audio-recorder
+    - slides
+    - word-count
+    - zk-prefixer
+    - random-note
+    - publish
+    - sync
+
+app_settings:
+  useMarkdownLinks: false
+  newLinkFormat: shortest
+  attachmentFolderPath: Assets
+  defaultViewMode: source
+  readableLineLength: true
+  strictLineBreaks: true
+  spellcheck: true
+  showLineNumber: true
+  newFileLocation: folder
+  newFileFolderPath: "00-Inbox"
+
+linter:
+  yaml_key_sort_order:
+    - type
+    - aliases
+    - date
+    - customer
+    - project
+    - status
+  rules:
+    blank_line_after_yaml: true
+    heading_increment: true
+    deduplicate_yaml_tags: true
+    consistent_list_marker: "-"
+
+note_types:
+  - customer
+  - person
+  - meeting
+  - project
+  - knowledge
+  - industry
+  - competition
+  - demo
+  - esat
+  - partner
+  - workshop
+  - certification
+  - daily
+  - weekly-review
+
+status_values:
+  - active
+  - inactive
+  - completed
+  - archived
+  - draft
+
+import:
+  tracker_file: .import_history.json

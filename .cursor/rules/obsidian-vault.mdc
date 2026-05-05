@@ -1,0 +1,62 @@
+---
+description: Obsidian vault content conventions for templates, prompts, and starter content
+globs: "templates/**/*.md,content/**/*.md,prompts/**/*.md"
+alwaysApply: false
+---
+
+# Obsidian Vault Content Conventions
+
+## Frontmatter
+
+- YAML block delimited by `---`
+- Only include properties that will be queried -- no blank or placeholder values
+- Use Templater `<% %>` syntax for dynamic prompts in templates
+
+## Relationship Fields
+
+Use wikilinks, not plain text slugs. This creates backlinks:
+
+```yaml
+customer: "[[Acme Corp]]"     # Good -- creates backlink
+customer: acme-corp            # Bad -- no backlink, fragile
+```
+
+## Aliases
+
+YAML list format only:
+
+```yaml
+aliases:
+  - Acme
+  - ACME Corp
+```
+
+## File Naming
+
+- Evergreen notes: Title Case with spaces (`Acme Corp.md`)
+- Dated notes: `YYYY-MM-DD - Title.md`
+
+## Tags
+
+Cross-cutting themes only: `#security`, `#observability`, `#search`, `#migration`. Never duplicate frontmatter. Flat namespace -- no nesting.
+
+## Dataview Queries
+
+- Always scope to folder: `FROM "03-Meetings"`
+- Use DQL, not JavaScript queries
+- Add `LIMIT` on list queries
+- Use `SORT` for deterministic order
+
+## Links
+
+Wikilinks `[[Note Title]]` for all internal references. Shortest path format.
+
+## Headings
+
+- Every template starts with `# <% tp.file.title %>` for reading mode
+- Body sections use H2 and below
+- No skipped heading levels (H2 -> H3, never H2 -> H4)
+
+## One Note, One Purpose
+
+Each template produces one atomic note. Never combine multiple meetings or topics.
