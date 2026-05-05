@@ -1,0 +1,40 @@
+filters:
+  and:
+    - file.inFolder("02-Projects")
+    - 'note.type == "project"'
+properties:
+  note.customer:
+    displayName: Customer
+  note.status:
+    displayName: Status
+  note.start-date:
+    displayName: Start
+  note.end-date:
+    displayName: End
+views:
+  - type: table
+    name: All Projects
+    order:
+      - file.name
+      - note.customer
+      - note.status
+      - note.start-date
+      - note.end-date
+  - type: table
+    name: Active
+    filters:
+      and:
+        - 'note.status == "active"'
+    order:
+      - file.name
+      - note.customer
+      - note.start-date
+      - note.end-date
+  - type: table
+    name: By Customer
+    groupBy:
+      property: note.customer
+    order:
+      - file.name
+      - note.status
+      - note.start-date

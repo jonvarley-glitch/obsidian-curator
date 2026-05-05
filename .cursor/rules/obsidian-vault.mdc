@@ -1,6 +1,6 @@
 ---
 description: Obsidian vault content conventions for templates, prompts, and starter content
-globs: "templates/**/*.md,content/**/*.md,prompts/**/*.md"
+globs: "templates/**/*.md,content/**/*.md,content/bases/**/*.base,prompts/**/*.md"
 alwaysApply: false
 ---
 
@@ -11,6 +11,24 @@ alwaysApply: false
 - YAML block delimited by `---`
 - Only include properties that will be queried -- no blank or placeholder values
 - Use Templater `<% %>` syntax for dynamic prompts in templates
+
+### Optional wikilink fields (avoid blank `[[]]`)
+
+When a relationship field is optional, do NOT write `customer: "[[<% tp.system.prompt(...) %>]]"` -- if the user submits an empty answer it produces a literal `"[[]]"` broken link. Use a Templater execution block at the top of the template, build the line conditionally, and inject it:
+
+```javascript
+<%*
+const customer = await tp.system.prompt("Customer (blank for none)");
+const customerLine = customer ? `customer: "[[${customer}]]"\n` : "";
+-%>
+---
+type: meeting
+date: <% tp.date.now("YYYY-MM-DD") %>
+<% customerLine -%>status: active
+---
+```
+
+The trailing `-%>` strips the newline after each Templater tag so the generated YAML stays compact. Required fields can stay inline (`customer: "[[<% prompt %>]]"`) -- this pattern only applies when blank is a valid answer.
 
 ## Relationship Fields
 
@@ -46,6 +64,37 @@ Cross-cutting themes only: `#security`, `#observability`, `#search`, `#migration
 - Use DQL, not JavaScript queries
 - Add `LIMIT` on list queries
 - Use `SORT` for deterministic order
+
+## Bases
+
+`.base` files in `content/bases/` (copied to the vault's `Bases/` folder) provide standalone interactive views. Use Bases when you want a dedicated, filterable, sortable table that lives outside any single note. Use Dataview when the table is a section of a hub page.
+
+`.base` syntax:
+- `filters:` `and:` / `or:` / `not:` with expressions like `note.type == "system"` or `file.inFolder("01-Customers")`
+- `views:` array, each with `type` (table | cards | list | map), `name`, optional `filters`, `order`, `groupBy`, `limit`
+- `properties:` to set display names for frontmatter fields
+
+## Tasks Plugin
+
+Use Tasks-plugin emoji syntax for due dates and priorities, not legacy Dataview inline fields:
+
+```markdown
+- [ ] Send proposal 📅 2026-03-14 ⏫
+```
+
+Queries on Home, daily, and weekly review templates use ```tasks blocks (Tasks-plugin syntax), not ```dataview TASK blocks.
+
+## Diagrams
+
+Excalidraw is primary. Embed pattern:
+
+```markdown
+![[<Note Title> - <Diagram Topic>.excalidraw]]
+```
+
+Drawings live in `Assets/Excalidraw/`. The `system`, `project`, and `customer` templates already ship with this embed placeholder. A Templater file-title interpolation looks like `![[<% tp.file.title %> - Architecture.excalidraw]]`.
+
+Mermaid blocks are allowed only for trivial inline diagrams; never replace an Excalidraw embed with a fabricated Mermaid diagram during polish.
 
 ## Links
 

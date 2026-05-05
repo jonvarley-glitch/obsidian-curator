@@ -40,7 +40,7 @@ Read from `config.yaml` via a typed dataclass or TypedDict. Never hardcode vault
 ## HTTP / API Calls
 
 - Use `requests` with `timeout=30`
-- Handle rate limits from GitHub API and Google APIs
+- Handle rate limits from the GitHub API
 - Always check `response.raise_for_status()`
 
 ## Logging
@@ -68,4 +68,4 @@ raise Exception("conversion failed")
 
 ## Testing
 
-Use `pytest`. Tests in `tests/` mirror source structure. Mock all filesystem and API calls.
+Use `pytest`. Tests in `tests/` mirror source structure. Mock network calls; use `tmp_path` for filesystem tests so the real vault is never touched. Ruff and pytest are configured in `pyproject.toml`.

@@ -5,7 +5,7 @@ title: Account Summary
 
 Generate a comprehensive account summary for the specified customer. Include:
 
-1. **Overview**: Company background, industry, and current Elastic engagement status
+1. **Overview**: Company background, industry, and current engagement status
 2. **Key Contacts**: People we interact with, their roles, and what they care about
 3. **Active Projects**: Current initiatives, their status, and next steps
 4. **Recent Activity**: Summary of recent meetings and discussions

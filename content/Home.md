@@ -2,6 +2,8 @@
 
 [[Getting Started]] · [[Conventions]]
 
+> Browse: [[Task Board]] · [[Bases/Customers|Customers]] · [[Bases/Meetings|Meetings]] · [[Bases/Projects|Projects]] · [[Bases/Systems|Systems]]
+
 ## Active Customers
 
 ```dataview
@@ -30,30 +32,41 @@ WHERE type = "project" AND status = "active"
 SORT start-date DESC
 ```
 
-## Open Tasks
+## Active Systems
 
 ```dataview
-TASK
-WHERE !completed AND !contains(text, "Example:")
-SORT due
-LIMIT 20
+TABLE vendor, category, owner
+FROM "04-Knowledge"
+WHERE type = "system" AND status = "active"
+SORT file.name
+```
+
+## Open Tasks
+
+```tasks
+not done
+sort by due
+limit 20
+hide backlink
 ```
 
 ## Overdue
 
-```dataview
-TASK
-WHERE !completed AND due AND due < date(today)
-SORT due
+```tasks
+not done
+due before today
+sort by due
+hide backlink
 ```
 
-## ESATs
+## Due This Week
 
-```dataview
-TABLE customer, opportunity, status
-FROM "08-ESATs"
-WHERE type = "esat"
-SORT date DESC
+```tasks
+not done
+due before in 7 days
+due after yesterday
+sort by due
+hide backlink
 ```
 
 ## Upcoming Deadlines

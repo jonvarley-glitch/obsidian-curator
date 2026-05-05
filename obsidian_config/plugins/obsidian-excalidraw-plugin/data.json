@@ -1,0 +1,20 @@
+{
+  "folder": "Assets/Excalidraw",
+  "compatibilityMode": false,
+  "previewMatchObsidianTheme": true,
+  "embedType": "PNG",
+  "embedWrapWidth": "",
+  "embedUseExcalidrawFolder": false,
+  "templateFilePath": "",
+  "showSplashScreen": true,
+  "renderImageInMarkdown": true,
+  "drawingFilenamePrefix": "Drawing ",
+  "drawingFilenameDateTime": "YYYY-MM-DD HH.mm.ss",
+  "useExcalidrawExtension": false,
+  "matchTheme": true,
+  "matchThemeAlways": false,
+  "matchThemeTrigger": false,
+  "defaultMode": "normal",
+  "embedReuseExportedImage": true,
+  "saveExcalidrawAsExcalidraw": false
+}

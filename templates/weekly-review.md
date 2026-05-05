@@ -24,10 +24,22 @@ SORT date DESC
 
 ## Completed Tasks This Week
 
-```dataview
-TASK
-WHERE completion >= date(today) - dur(7 days) AND completed
-LIMIT 30
+```tasks
+done
+done after 7 days ago
+sort by done reverse
+limit 30
+hide backlink
+```
+
+## Open Tasks Carried Over
+
+```tasks
+not done
+due before today
+sort by due
+limit 20
+hide backlink
 ```
 
 ## Inbox Review

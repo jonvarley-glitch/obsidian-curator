@@ -11,6 +11,7 @@
   "command-palette": true,
   "page-preview": true,
   "note-composer": true,
+  "bases": true,
   "daily-notes": false,
   "templates": false,
   "audio-recorder": false,

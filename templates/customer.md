@@ -18,6 +18,19 @@ tier: <% tp.system.prompt("Tier (e.g. Strategic, Growth, Standard)") %>
 | ---- | ---- | ----- |
 |      |      |       |
 
+## Architecture Overview
+
+![[<% tp.file.title %> - Architecture.excalidraw]]
+
+## Key Systems
+
+```dataview
+TABLE vendor, category, owner, status
+FROM "04-Knowledge"
+WHERE type = "system" AND customer = this.file.link
+SORT file.name
+```
+
 ## Meetings
 
 ```dataview
@@ -48,8 +61,17 @@ SORT file.name
 
 ## Open Tasks
 
-```dataview
-TASK
-WHERE customer = this.file.link AND !completed
-SORT due
+<!--
+Captures any incomplete task that either (a) mentions this customer by literal
+wikilink in its text, or (b) lives in a note whose path contains the customer
+name (e.g. dated meetings like `2026-03-09 - <Customer> - Topic.md`). Aliases
+in task text are not matched -- write `[[<Customer>]]` exactly to surface the
+task here.
+-->
+
+```tasks
+not done
+(description includes [[<% tp.file.title %>]]) OR (path includes <% tp.file.title %>)
+sort by due
+hide backlink
 ```

@@ -3,8 +3,8 @@
 # Scripts read this file -- they never hardcode vault structure.
 
 vault:
-  name: ElasticSA
-  path: ~/Documents/ObsidianVaults/ElasticSA
+  name: SAVault
+  path: ~/Documents/ObsidianVaults/SAVault
 
 folders:
   - "00-Inbox"
@@ -15,7 +15,6 @@ folders:
   - "05-Industry"
   - "06-Competition"
   - "07-Demos"
-  - "08-ESATs"
   - "09-Workshops"
   - "10-Certifications"
   - "11-Partners"
@@ -24,7 +23,10 @@ folders:
   - "90-Archive"
   - "Templates"
   - "Prompts"
+  - "Bases"
+  - "Daily"
   - "Assets"
+  - "Assets/Excalidraw"
 
 plugins:
   # AI
@@ -44,6 +46,8 @@ plugins:
     repo: blacksmithgu/obsidian-dataview
 
   # Task and project management
+  - id: obsidian-tasks-plugin
+    repo: obsidian-tasks-group/obsidian-tasks
   - id: obsidian-kanban
     repo: mgmeyers/obsidian-kanban
 
@@ -65,6 +69,10 @@ plugins:
   - id: find-unlinked-files
     repo: Vinzent03/find-unlinked-files
 
+  # Diagramming
+  - id: obsidian-excalidraw-plugin
+    repo: zsviczian/obsidian-excalidraw-plugin
+
 core_plugins:
   enable:
     - file-explorer
@@ -79,6 +87,7 @@ core_plugins:
     - command-palette
     - page-preview
     - note-composer
+    - bases
   disable:
     - daily-notes        # Replaced by Periodic Notes
     - templates          # Replaced by Templater
@@ -102,42 +111,18 @@ app_settings:
   newFileLocation: folder
   newFileFolderPath: "00-Inbox"
 
-linter:
-  yaml_key_sort_order:
-    - type
-    - aliases
-    - date
-    - customer
-    - project
-    - status
-  rules:
-    blank_line_after_yaml: true
-    heading_increment: true
-    deduplicate_yaml_tags: true
-    consistent_list_marker: "-"
-
 note_types:
   - customer
   - person
   - meeting
   - project
   - knowledge
+  - system
   - industry
   - competition
   - demo
-  - esat
   - partner
   - workshop
   - certification
   - daily
   - weekly-review
-
-status_values:
-  - active
-  - inactive
-  - completed
-  - archived
-  - draft
-
-import:
-  tracker_file: .import_history.json

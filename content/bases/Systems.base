@@ -1,0 +1,51 @@
+filters:
+  and:
+    - 'note.type == "system"'
+properties:
+  note.vendor:
+    displayName: Vendor
+  note.category:
+    displayName: Category
+  note.owner:
+    displayName: Owner
+  note.status:
+    displayName: Status
+  note.customer:
+    displayName: Customer
+views:
+  - type: table
+    name: All Systems
+    order:
+      - file.name
+      - note.vendor
+      - note.category
+      - note.owner
+      - note.status
+  - type: table
+    name: Active
+    filters:
+      and:
+        - 'note.status == "active"'
+    order:
+      - file.name
+      - note.vendor
+      - note.category
+      - note.owner
+  - type: table
+    name: By Category
+    groupBy:
+      property: note.category
+    order:
+      - file.name
+      - note.vendor
+      - note.owner
+      - note.status
+  - type: table
+    name: By Customer
+    groupBy:
+      property: note.customer
+    order:
+      - file.name
+      - note.vendor
+      - note.category
+      - note.status

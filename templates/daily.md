@@ -18,20 +18,24 @@ date: <% tp.date.now("YYYY-MM-DD") %>
 
 ## Tasks
 
-- [x] 
+- [ ]
 
 ### Due Today
 
-```dataview
-TASK
-WHERE !completed AND due = date(today)
+```tasks
+not done
+due on today
+sort by priority
+hide backlink
 ```
 
 ### Overdue
 
-```dataview
-TASK
-WHERE !completed AND due AND due < date(today)
+```tasks
+not done
+due before today
+sort by due
+hide backlink
 ```
 
 ## End of Day Review

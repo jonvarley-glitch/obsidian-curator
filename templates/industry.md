@@ -12,7 +12,7 @@ vertical: <% tp.system.prompt("Vertical (e.g. Financial Services, Healthcare, Re
 
 
 
-## Elastic Value Proposition
+## Our Value Proposition
 
 
 

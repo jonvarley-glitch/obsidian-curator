@@ -1,6 +1,6 @@
 ---
 type: knowledge
-product-area: <% tp.system.prompt("Product area (e.g. Search, Observability, Security, Platform)") %>
+product-area: <% tp.system.prompt("Product area") %>
 ---
 # <% tp.file.title %>
 

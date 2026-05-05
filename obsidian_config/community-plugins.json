@@ -4,6 +4,7 @@
   "templater-obsidian",
   "quickadd",
   "dataview",
+  "obsidian-tasks-plugin",
   "obsidian-kanban",
   "obsidian-calendar-plugin",
   "periodic-notes",
@@ -11,5 +12,6 @@
   "homepage",
   "tag-wrangler",
   "obsidian-linter",
-  "find-unlinked-files"
+  "find-unlinked-files",
+  "obsidian-excalidraw-plugin"
 ]

@@ -1,12 +1,10 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+.ruff_cache/
 *.egg-info/
 dist/
 build/
-
-# Import tracking state
-.import_history.json
 
 # OS
 .DS_Store

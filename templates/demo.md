@@ -1,6 +1,6 @@
 ---
 type: demo
-product: <% tp.system.prompt("Product (e.g. Elasticsearch, Kibana, Fleet, Elastic Security)") %>
+product: <% tp.system.prompt("Product") %>
 customer: "[[<% tp.system.prompt("Customer (or leave blank for generic)") %>]]"
 status: draft
 ---

@@ -1,5 +1,5 @@
 ---
-description: Core project context for vault-forge - an Obsidian vault generator for an Elastic Solution Architect
+description: Core project context for vault-forge - a generic Obsidian vault generator for a Solution Architect
 alwaysApply: true
 ---
 
@@ -7,27 +7,45 @@ alwaysApply: true
 
 ## What This Project Is
 
-`vault-forge` is a Python tool that generates and manages an Obsidian vault tailored for a Solution Architect at Elastic. It is NOT the vault itself -- it produces a vault as output.
+`vault-forge` is a Python tool that generates and manages an Obsidian vault tailored for a Solution Architect. It is NOT the vault itself -- it produces a vault as output.
 
 ## Tech Stack
 
 - Python 3.11+
-- Dependencies: PyYAML, requests, pypandoc_binary, python-pptx
+- Runtime deps: PyYAML, requests
+- Dev deps: ruff, pytest
 - No web framework. CLI scripts only.
 
 ## Project Structure
 
-- `setup_vault.py` -- main entry point, scaffolds the vault
-- `import_notes.py` -- imports local .docx/.pptx/.md/.txt files into the vault
+- `setup_vault.py` -- main entry point with argparse (`--config`, `--vault-path`, `--validate`, `--skip-plugins`)
 - `config.yaml` -- drives ALL configuration (vault path, folders, plugins, settings)
 - `templates/` -- Obsidian Templater templates (copied into vault)
 - `prompts/` -- Copilot AI prompt templates (copied into vault)
-- `obsidian_config/` -- `.obsidian/` JSON configs
-- `content/` -- starter vault content (Home.md, CLAUDE.md, Conventions.md, Getting Started.md)
+- `obsidian_config/` -- `.obsidian/` JSON configs (top-level + per-plugin `data.json`)
+- `content/` -- starter vault content (Home.md, CLAUDE.md, Conventions.md, Getting Started.md, Task Board.md)
+- `content/bases/` -- starter Bases views (`.base` files) copied into the vault's `Bases/` folder
+- `.claude/commands/` -- project-level slash commands (Cursor + Claude Code)
+- `tests/` -- pytest suite
+- `.github/workflows/ci.yml` -- ruff + yaml validate + pytest on push/PR
 
 ## Key Rules
 
 1. **Config-driven**: All vault structure, folder names, plugin lists, and settings live in `config.yaml`. Scripts read config -- never hardcode vault structure.
 2. **Output isolation**: The generated vault is a separate directory (path from `config.yaml`). Scripts must never modify files outside the target vault path.
-3. **Idempotency**: `setup_vault.py` must be safe to re-run. Never overwrite existing user notes. Configs and templates may be updated.
-4. **Coding style**: Type hints on all functions. Docstrings on public functions (PEP 257). Use `pathlib.Path` not `os.path`. Use `logging` not `print`. Actionable error messages.
+3. **Idempotency**: `setup_vault.py` must be safe to re-run. Never overwrite existing user notes, customised `.base` files, per-plugin `data.json` files, or top-level `.obsidian/*.json` files (except `app.json`, which is merged with `config.app_settings` and rewritten on every run so config edits propagate). `Templates/` and `Prompts/` are refreshed on each run -- treat them as project-owned artifacts; users who customise should save under a new filename. `.gitignore` is regenerated each run.
+4. **Coding style**: Type hints on all functions. Docstrings on public functions (PEP 257). Use `pathlib.Path` not `os.path`. Use `logging` not `print`. Actionable error messages. Raise `ConfigError` for malformed config; do not silently swallow.
+
+## Note Type Discipline
+
+Note types are listed in `config.yaml` under `note_types:` and documented in `content/CLAUDE.md` and `content/Conventions.md`. The `system` type documents technologies / products / integrations and lives in `04-Knowledge/`. Adding a new type is a deliberate decision -- always update config, conventions, the AI manifest, and (if visual) Bases.
+
+## Diagram Conventions
+
+- **Excalidraw is the primary diagramming tool.** Drawings live in `Assets/Excalidraw/` and embed via `![[<Note Title> - <Diagram Topic>.excalidraw]]`.
+- **Mermaid** is allowed only for trivial inline diagrams inside meeting / project notes (fenced ```` ```mermaid ```` blocks).
+- The `system`, `project`, and `customer` templates ship with an Excalidraw embed placeholder for the architecture section.
+
+## Bases vs Dataview
+
+Both ship enabled. Dataview powers inline tables on hub pages (`Home.md`, customer / project notes). Bases (Obsidian core plugin) powers standalone interactive views in `Bases/`. Do not migrate one to the other -- they coexist.

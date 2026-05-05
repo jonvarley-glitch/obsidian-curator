@@ -1,7 +1,7 @@
 ---
 type: competition
 competitor: <% tp.system.prompt("Competitor name") %>
-product-area: <% tp.system.prompt("Product area (e.g. Search, Observability, Security, SIEM)") %>
+product-area: <% tp.system.prompt("Product area") %>
 ---
 # <% tp.file.title %>
 
@@ -17,5 +17,5 @@ product-area: <% tp.system.prompt("Product area (e.g. Search, Observability, Sec
 
 -
 
-## Elastic Positioning
+## Our Positioning
 

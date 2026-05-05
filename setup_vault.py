@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Vault Forge: Scaffold an Obsidian vault for an Elastic Solution Architect.
+"""Vault Forge: Scaffold an Obsidian vault for a Solution Architect.
 
 Reads config.yaml and creates the full vault structure including folders,
 templates, starter content, .obsidian configs, and community plugins.
@@ -8,11 +8,11 @@ Safe to re-run -- never overwrites existing user notes.
 """
 from __future__ import annotations
 
-import io
+import argparse
 import json
 import logging
+import re
 import shutil
-import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -51,20 +51,43 @@ class VaultConfig:
     core_plugins: dict[str, bool]
     app_settings: dict[str, Any]
     community_plugin_ids: list[str]
+    note_types: list[str] = field(default_factory=list)
     gitignore_lines: list[str] = field(default_factory=list)
 
 
+class ConfigError(ValueError):
+    """Raised when config.yaml is missing required keys or has invalid values."""
+
+
 def load_config(config_path: Path) -> VaultConfig:
-    """Load and validate config.yaml into a typed VaultConfig."""
+    """Load and validate config.yaml into a typed VaultConfig.
+
+    Raises ConfigError if the file is structurally invalid.
+    """
     with config_path.open(encoding="utf-8") as f:
-        raw = yaml.safe_load(f)
+        raw = yaml.safe_load(f) or {}
 
-    vault_path = Path(raw["vault"]["path"]).expanduser().resolve()
+    if "vault" not in raw or not isinstance(raw["vault"], dict):
+        raise ConfigError("config.yaml: missing required 'vault' section")
+    vault_section = raw["vault"]
+    for required in ("name", "path"):
+        if not vault_section.get(required):
+            raise ConfigError(f"config.yaml: vault.{required} is required")
 
-    plugins = [
-        PluginSpec(id=p["id"], repo=p["repo"])
-        for p in raw.get("plugins", [])
-    ]
+    vault_path = Path(vault_section["path"]).expanduser().resolve()
+
+    plugins: list[PluginSpec] = []
+    for i, p in enumerate(raw.get("plugins") or []):
+        if not isinstance(p, dict) or "id" not in p or "repo" not in p:
+            raise ConfigError(
+                f"config.yaml: plugins[{i}] must have 'id' and 'repo' fields",
+            )
+        if "/" not in p["repo"]:
+            raise ConfigError(
+                f"config.yaml: plugins[{i}].repo must be 'owner/name', got "
+                f"'{p['repo']}'",
+            )
+        plugins.append(PluginSpec(id=p["id"], repo=p["repo"]))
 
     core_map: dict[str, bool] = {}
     for pid in raw.get("core_plugins", {}).get("enable", []):
@@ -86,15 +109,91 @@ def load_config(config_path: Path) -> VaultConfig:
     ]
 
     return VaultConfig(
-        name=raw["vault"]["name"],
+        name=vault_section["name"],
         path=vault_path,
-        folders=raw.get("folders", []),
+        folders=raw.get("folders") or [],
         plugins=plugins,
         core_plugins=core_map,
-        app_settings=raw.get("app_settings", {}),
-        community_plugin_ids=[p["id"] for p in raw.get("plugins", [])],
+        app_settings=raw.get("app_settings") or {},
+        community_plugin_ids=[p.id for p in plugins],
+        note_types=raw.get("note_types") or [],
         gitignore_lines=gitignore,
     )
+
+
+_TEMPLATE_TYPE_RE = re.compile(r"^type:\s*(\S+)\s*$", re.MULTILINE)
+
+
+def scan_template_types(templates_dir: Path) -> dict[str, str | None]:
+    """Return {filename: type} parsed from template frontmatter.
+
+    Skips Templater dynamic placeholders (`<% ... %>`) -- only literal
+    `type: <value>` lines are returned. Files without such a line map to None.
+    """
+    types: dict[str, str | None] = {}
+    for f in sorted(templates_dir.glob("*.md")):
+        text = f.read_text(encoding="utf-8")
+        match = _TEMPLATE_TYPE_RE.search(text)
+        if match and not match.group(1).startswith("<%"):
+            types[f.name] = match.group(1)
+        else:
+            types[f.name] = None
+    return types
+
+
+def validate_config(
+    config: VaultConfig,
+    templates_dir: Path | None = None,
+) -> list[str]:
+    """Run lightweight semantic checks beyond structural parsing.
+
+    Returns a list of human-readable warnings/errors (empty if all clean).
+    Does not raise -- caller decides how to react.
+
+    When `templates_dir` is provided (or defaults to PROJECT_ROOT/templates),
+    every `*.md` template's `type:` frontmatter is checked against
+    `config.note_types` so typos and forgotten config updates are caught.
+    """
+    issues: list[str] = []
+    if not config.folders:
+        issues.append("folders: list is empty")
+    if not config.plugins:
+        issues.append("plugins: no community plugins configured")
+    if not config.app_settings:
+        issues.append("app_settings: empty (vault will use Obsidian defaults)")
+    seen_ids: set[str] = set()
+    for plugin in config.plugins:
+        if plugin.id in seen_ids:
+            issues.append(f"plugins: duplicate id '{plugin.id}'")
+        seen_ids.add(plugin.id)
+
+    if templates_dir is None:
+        templates_dir = PROJECT_ROOT / "templates"
+    if config.note_types and templates_dir.is_dir():
+        allowed = set(config.note_types)
+        for filename, t in scan_template_types(templates_dir).items():
+            if t is None:
+                issues.append(
+                    f"templates/{filename}: missing literal 'type:' in frontmatter",
+                )
+            elif t not in allowed:
+                issues.append(
+                    f"templates/{filename}: type '{t}' not in note_types",
+                )
+    return issues
+
+
+def print_summary(config: VaultConfig) -> None:
+    """Print a human-readable summary of the loaded config."""
+    logger.info("Vault name:       %s", config.name)
+    logger.info("Vault path:       %s", config.path)
+    logger.info("Folders:          %d", len(config.folders))
+    logger.info("Community plugins: %d", len(config.plugins))
+    enabled = sum(1 for v in config.core_plugins.values() if v)
+    disabled = sum(1 for v in config.core_plugins.values() if not v)
+    logger.info("Core plugins:     %d enabled, %d disabled", enabled, disabled)
+    logger.info("App settings:     %d keys", len(config.app_settings))
+    logger.info("Note types:       %d", len(config.note_types))
 
 
 # ---------------------------------------------------------------------------
@@ -137,14 +236,25 @@ def copy_prompts(config: VaultConfig) -> None:
         logger.info("Prompt: Prompts/%s", src_file.name)
 
 
-def copy_starter_content(config: VaultConfig) -> None:
-    """Copy starter content to vault root.
+_STARTER_CONTENT_NAMES = {
+    "Home.md",
+    "CLAUDE.md",
+    "Conventions.md",
+    "Getting Started.md",
+}
 
-    Includes Home.md, CLAUDE.md, Conventions.md, Getting Started.md.
-    Never overwrites existing files to protect user edits.
+
+def copy_starter_content(config: VaultConfig) -> None:
+    """Copy starter content (Home, CLAUDE, Conventions, Getting Started) to vault root.
+
+    Never overwrites existing files to protect user edits. Other markdown files
+    in `content/` (e.g. Task Board.md) are placed by their own dedicated copy
+    step into the right folder.
     """
     src_dir = PROJECT_ROOT / "content"
     for src_file in sorted(src_dir.glob("*.md")):
+        if src_file.name not in _STARTER_CONTENT_NAMES:
+            continue
         dest_file = config.path / src_file.name
         if dest_file.exists():
             logger.warning("Skipped (exists): %s", src_file.name)
@@ -153,20 +263,99 @@ def copy_starter_content(config: VaultConfig) -> None:
         logger.info("Content: %s", src_file.name)
 
 
+def copy_bases(config: VaultConfig) -> None:
+    """Copy starter `.base` files into the vault's Bases/ folder.
+
+    Idempotent: never overwrites a `.base` the user has customised.
+    """
+    src_dir = PROJECT_ROOT / "content" / "bases"
+    if not src_dir.exists():
+        return
+    dest_dir = config.path / "Bases"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    for src_file in sorted(src_dir.glob("*.base")):
+        dest_file = dest_dir / src_file.name
+        if dest_file.exists():
+            logger.warning("Skipped (exists): Bases/%s", src_file.name)
+            continue
+        shutil.copy2(src_file, dest_file)
+        logger.info("Base: Bases/%s", src_file.name)
+
+
+def copy_kanban(config: VaultConfig) -> None:
+    """Copy the starter Task Board into 13-Tasks/ if not already present.
+
+    Idempotent: never overwrites an existing board.
+    """
+    src_file = PROJECT_ROOT / "content" / "Task Board.md"
+    if not src_file.exists():
+        return
+    dest_dir = config.path / "13-Tasks"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest_file = dest_dir / "Task Board.md"
+    if dest_file.exists():
+        logger.warning("Skipped (exists): 13-Tasks/Task Board.md")
+        return
+    shutil.copy2(src_file, dest_file)
+    logger.info("Kanban: 13-Tasks/Task Board.md")
+
+
 # ---------------------------------------------------------------------------
 # Obsidian config
 # ---------------------------------------------------------------------------
 
 def write_obsidian_config(config: VaultConfig) -> None:
-    """Write .obsidian/ JSON configuration files."""
+    """Write .obsidian/ JSON configuration files (top-level and per-plugin).
+
+    `app.json` is special: the shipped file acts as a structural shell, then
+    `config.app_settings` is merged on top (config wins). It is rewritten on
+    every run so config edits propagate. All other top-level JSONs are
+    idempotent -- if the destination exists, it is left alone so user changes
+    made via Obsidian's settings UI are preserved.
+    """
     obsidian_dir = config.path / ".obsidian"
     obsidian_dir.mkdir(parents=True, exist_ok=True)
 
     src_dir = PROJECT_ROOT / "obsidian_config"
     for src_file in sorted(src_dir.glob("*.json")):
         dest_file = obsidian_dir / src_file.name
+        if src_file.name == "app.json":
+            base = json.loads(src_file.read_text(encoding="utf-8"))
+            merged = {**base, **config.app_settings}
+            dest_file.write_text(
+                json.dumps(merged, indent=2) + "\n", encoding="utf-8",
+            )
+            logger.info("Config: .obsidian/app.json (merged from config.yaml)")
+            continue
+        if dest_file.exists():
+            logger.warning("Skipped (exists): .obsidian/%s", src_file.name)
+            continue
         shutil.copy2(src_file, dest_file)
         logger.info("Config: .obsidian/%s", src_file.name)
+
+
+def write_plugin_configs(config: VaultConfig) -> None:
+    """Copy per-plugin data.json files into .obsidian/plugins/<id>/data.json.
+
+    Runs after install_plugins so the destination directories exist. Existing
+    plugin data files are not overwritten -- protects user customisations.
+    """
+    src_root = PROJECT_ROOT / "obsidian_config" / "plugins"
+    if not src_root.exists():
+        return
+    dest_root = config.path / ".obsidian" / "plugins"
+    for src_file in sorted(src_root.glob("*/data.json")):
+        plugin_id = src_file.parent.name
+        dest_dir = dest_root / plugin_id
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest_file = dest_dir / "data.json"
+        if dest_file.exists():
+            logger.warning(
+                "Skipped (exists): .obsidian/plugins/%s/data.json", plugin_id,
+            )
+            continue
+        shutil.copy2(src_file, dest_file)
+        logger.info("Plugin config: .obsidian/plugins/%s/data.json", plugin_id)
 
 
 # ---------------------------------------------------------------------------
@@ -248,11 +437,15 @@ def install_plugins(config: VaultConfig) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Git initialisation
+# Vault .gitignore
 # ---------------------------------------------------------------------------
 
-def init_git(config: VaultConfig) -> None:
-    """Create .gitignore in the vault. Does not run git init."""
+def write_vault_gitignore(config: VaultConfig) -> None:
+    """Write the vault's `.gitignore` from `config.gitignore_lines`.
+
+    Always rewrites the file so updates to the ignore list propagate. Does
+    not run `git init` -- the user opts into version control themselves.
+    """
     gitignore_path = config.path / ".gitignore"
     content = "\n".join(config.gitignore_lines) + "\n"
     gitignore_path.write_text(content, encoding="utf-8")
@@ -263,17 +456,28 @@ def init_git(config: VaultConfig) -> None:
 # Main
 # ---------------------------------------------------------------------------
 
-def setup_vault(config_path: Path | None = None) -> None:
-    """Run the full vault setup pipeline."""
+def setup_vault(
+    config_path: Path | None = None,
+    vault_path_override: Path | None = None,
+    skip_plugins: bool = False,
+) -> None:
+    """Run the full vault setup pipeline.
+
+    Args:
+        config_path: Path to config.yaml. Defaults to project root.
+        vault_path_override: Optional override for the vault.path from config.
+        skip_plugins: If True, do not download community plugins (offline / CI).
+    """
     if config_path is None:
         config_path = PROJECT_ROOT / "config.yaml"
 
     if not config_path.exists():
-        raise FileNotFoundError(
-            f"Config not found: {config_path} -- copy config.yaml.example and customise"
-        )
+        raise FileNotFoundError(f"Config not found: {config_path}")
 
     config = load_config(config_path)
+
+    if vault_path_override is not None:
+        config.path = vault_path_override.expanduser().resolve()
 
     logger.info("=" * 60)
     logger.info("Vault Forge -- Setting up: %s", config.name)
@@ -286,9 +490,15 @@ def setup_vault(config_path: Path | None = None) -> None:
     copy_templates(config)
     copy_prompts(config)
     copy_starter_content(config)
+    copy_bases(config)
+    copy_kanban(config)
     write_obsidian_config(config)
-    install_plugins(config)
-    init_git(config)
+    if skip_plugins:
+        logger.info("Skipping plugin downloads (--skip-plugins)")
+    else:
+        install_plugins(config)
+    write_plugin_configs(config)
+    write_vault_gitignore(config)
 
     logger.info("=" * 60)
     logger.info("Vault setup complete!")
@@ -296,5 +506,76 @@ def setup_vault(config_path: Path | None = None) -> None:
     logger.info("=" * 60)
 
 
+def _build_arg_parser() -> argparse.ArgumentParser:
+    """Build the CLI argument parser.
+
+    Kept private to setup_vault; callers should invoke `main()` instead.
+    """
+    parser = argparse.ArgumentParser(
+        prog="setup_vault.py",
+        description="Scaffold an Obsidian vault for a Solution Architect.",
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=None,
+        help="Path to config.yaml (default: ./config.yaml).",
+    )
+    parser.add_argument(
+        "--vault-path",
+        type=Path,
+        default=None,
+        help="Override vault.path from config (useful for tests / dry runs).",
+    )
+    parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Parse and validate config, print summary, do not write any files.",
+    )
+    parser.add_argument(
+        "--skip-plugins",
+        action="store_true",
+        help="Skip plugin downloads (offline use, CI).",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry point.
+
+    Returns a Unix-style exit code: 0 on success, 1 on config / validation
+    errors. With `--validate`, no files are written.
+    """
+    args = _build_arg_parser().parse_args(argv)
+    config_path = args.config or PROJECT_ROOT / "config.yaml"
+
+    if args.validate:
+        if not config_path.exists():
+            logger.error("Config not found: %s", config_path)
+            return 1
+        try:
+            config = load_config(config_path)
+        except ConfigError as exc:
+            logger.error("Config error: %s", exc)
+            return 1
+        if args.vault_path is not None:
+            config.path = args.vault_path.expanduser().resolve()
+        print_summary(config)
+        issues = validate_config(config)
+        if issues:
+            for issue in issues:
+                logger.warning("Validation: %s", issue)
+        else:
+            logger.info("Validation: OK")
+        return 0
+
+    setup_vault(
+        config_path=config_path,
+        vault_path_override=args.vault_path,
+        skip_plugins=args.skip_plugins,
+    )
+    return 0
+
+
 if __name__ == "__main__":
-    setup_vault()
+    raise SystemExit(main())

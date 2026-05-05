@@ -1,0 +1,36 @@
+filters:
+  and:
+    - file.inFolder("01-Customers")
+    - 'note.type == "customer"'
+properties:
+  note.industry:
+    displayName: Industry
+  note.tier:
+    displayName: Tier
+  note.status:
+    displayName: Status
+views:
+  - type: table
+    name: All Customers
+    order:
+      - file.name
+      - note.industry
+      - note.tier
+      - note.status
+  - type: table
+    name: Active
+    filters:
+      and:
+        - 'note.status == "active"'
+    order:
+      - file.name
+      - note.industry
+      - note.tier
+  - type: table
+    name: By Tier
+    groupBy:
+      property: note.tier
+    order:
+      - file.name
+      - note.industry
+      - note.status

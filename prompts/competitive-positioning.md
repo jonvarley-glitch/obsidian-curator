@@ -8,7 +8,7 @@ Create a competitive positioning brief for the specified competitor in the conte
 1. **Competitor Overview**: What does this competitor offer in the relevant product area?
 2. **Their Strengths**: Where they genuinely excel -- be honest
 3. **Their Weaknesses**: Known gaps, limitations, or common customer complaints
-4. **Elastic Differentiators**: Where Elastic has clear advantages
+4. **Our Differentiators**: Where we have clear advantages
 5. **Recommended Talking Points**: Specific messages for customer conversations
 6. **Landmines to Avoid**: Topics where the competitor has an edge -- steer away from these
 

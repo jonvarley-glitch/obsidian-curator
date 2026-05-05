@@ -1,0 +1,36 @@
+filters:
+  and:
+    - file.inFolder("03-Meetings")
+    - 'note.type == "meeting"'
+properties:
+  note.date:
+    displayName: Date
+  note.customer:
+    displayName: Customer
+  note.project:
+    displayName: Project
+views:
+  - type: table
+    name: All Meetings
+    order:
+      - note.date
+      - file.name
+      - note.customer
+      - note.project
+  - type: table
+    name: Last 30 Days
+    filters:
+      and:
+        - 'note.date >= date(today).subtract(30, "days")'
+    order:
+      - note.date
+      - file.name
+      - note.customer
+  - type: table
+    name: By Customer
+    groupBy:
+      property: note.customer
+    order:
+      - note.date
+      - file.name
+      - note.project
